@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fancy Ping Pong</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right, #1e3c72, #2a5298);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #game {
+      position: relative;
+      width: 800px;
+      height: 400px;
+      background-color: #1e2a47;
+      border-radius: 8px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Paddles */
+    .paddle {
+      position: absolute;
+      width: 20px;
+      height: 100px;
+      background-color: #00ff00;
+      border-radius: 10px;
+      transition: top 0.05s ease;
+    }
+
+    #paddle1 {
+      left: 0;
+    }
+
+    #paddle2 {
+      right: 0;
+    }
+
+    /* Ball */
+    #ball {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background-color: #ff4d4d;
+      border-radius: 50%;
+      box-shadow: 0 0 20px #ff4d4d;
+      transition: left 0.05s ease, top 0.05s ease;
+    }
+
+    /* Scoreboard */
+    .score {
+      position: absolute;
+      font-size: 30px;
+      color: white;
+      font-weight: bold;
+      top: 20px;
+    }
+
+    #player1-score {
+      left: 50px;
+    }
+
+    #player2-score {
+      right: 50px;
+    }
+
+    /* Restart Button */
+    #restart-button {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #f39c12;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #restart-button:hover {
+      background-color: #e67e22;
+    }
+
+    #winner {
+      position: absolute;
+      font-size: 50px;
+      color: #ff6347;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div id="game">
+    <div class="score" id="player1-score">0</div>
+    <div class="score" id="player2-score">0</div>
+    <div id="paddle1" class="paddle"></div>
+    <div id="paddle2" class="paddle"></div>
+    <div id="ball"></div>
+    <div id="winner"></div>
+    <button id="restart-button">Restart</button>
+  </div>
+
+  <script>
+    // Game Variables
+    const game = document.getElementById("game");
+    const paddle1 = document.getElementById("paddle1");
+    const paddle2 = document.getElementById("paddle2");
+    const ball = document.getElementById("ball");
+    const player1ScoreElement = document.getElementById("player1-score");
+    const player2ScoreElement = document.getElementById("player2-score");
+    const restartButton = document.getElementById("restart-button");
+    const winnerElement = document.getElementById("winner");
+
+    let paddle1Y = 150;
+    let paddle2Y = 150;
+    let ballX = 390;
+    let ballY = 190;
+    let ballSpeedX = 4;
+    let ballSpeedY = 4;
+    let player1Score = 0;
+    let player2Score = 0;
+
+    // Move Paddles with Keypress (Player 1)
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "w" && paddle1Y > 0) paddle1Y -= 20; // Paddle 1 Up
+      if (e.key === "s" && paddle1Y < 300) paddle1Y += 20; // Paddle 1 Down
+      updatePaddles();
+    });
+
+    // Update Paddles Position
+    function updatePaddles() {
+      paddle1.style.top = paddle1Y + "px";
+      paddle2.style.top = paddle2Y + "px";
+    }
+
+    // Update Ball Position
+    function updateBall() {
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      // Bounce on Top & Bottom Walls
+      if (ballY <= 0 || ballY >= 380) ballSpeedY *= -1;
+
+      // Paddle Collisions
+      if (ballX <= 30 && ballY >= paddle1Y && ballY <= paddle1Y + 100) ballSpeedX *= -1;
+      if (ballX >= 750 && ballY >= paddle2Y && ballY <= paddle2Y + 100) ballSpeedX *= -1;
+
+      // Reset Ball if Out of Bounds and Update Score
+      if (ballX <= 0) {
+        player2Score++;
+        resetBall();
+      }
+      if (ballX >= 780) {
+        player1Score++;
+        resetBall();
+      }
+
+      ball.style.left = ballX + "px";
+      ball.style.top = ballY + "px";
+
+      updateScore();
+      checkWinCondition();
+    }
+
+    // AI Logic to Move Paddle 2
+    function moveAI() {
+      if (paddle2Y + 50 < ballY) {
+        paddle2Y += 3; // AI Moves Slower (Easy Difficulty)
+      } else if (paddle2Y + 50 > ballY) {
+        paddle2Y -= 3; // AI Moves Slower (Easy Difficulty)
+      }
+
+      // Prevent AI from moving out of bounds
+      if (paddle2Y < 0) paddle2Y = 0;
+      if (paddle2Y > 300) paddle2Y = 300;
+
+      updatePaddles();
+    }
+
+    // Reset Ball Position
+    function resetBall() {
+      ballX = 390;
+      ballY = 190;
+      ballSpeedX = ballSpeedX > 0 ? -4 : 4; // Reverse Starting Direction
+    }
+
+    // Update Scoreboard
+    function updateScore() {
+      player1ScoreElement.textContent = player1Score;
+      player2ScoreElement.textContent = player2Score;
+    }
+
+    // Check Win Condition
+    function checkWinCondition() {
+      if (player1Score >= 5) {
+        displayWinner("Player 1 Wins!");
+      } else if (player2Score >= 5) {
+        displayWinner("AI Wins!");
+      }
+    }
+
+    // Display Winner and Reset Game
+    function displayWinner(message) {
+      winnerElement.textContent = message;
+      winnerElement.style.display = "block";
+      setTimeout(() => {
+        player1Score = 0;
+        player2Score = 0;
+        updateScore();
+        winnerElement.style.display = "none";
+        resetBall();
+      }, 3000);
+    }
+
+    // Game Loop
+    function gameLoop() {
+      updateBall();
+      moveAI();  // Move the AI paddle automatically
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Restart Button
+    restartButton.addEventListener("click", () => {
+      player1Score = 0;
+      player2Score = 0;
+      updateScore();
+      resetBall();
+      winnerElement.style.display = "none";
+    });
+
+    // Start Game
+    updatePaddles();
+    gameLoop();
+  </script>
+</body>
+</html>
